@@ -1,7 +1,10 @@
 from lib import *
 import discord
 from discord import message
-import math
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 client = discord.Client()
 prefix = "!"
@@ -40,11 +43,21 @@ async def on_message(message):
     
     # Download meme database
     if message.content.startswith(prefix+"download") and message.author.id == myid:
-        await download(message)
+        try:
+            await download(message)
+        except InvalidArgument:
+            await message.channel.send("Il messaggio deve contenere il canale da cui scaricare i meme: '!download #memes-chat'")
+        except:
+            await message.channel.send("Qualcosa è andato storto")
+
     elif message.content.startswith(prefix+"download") and message.author.id != myid:
         await message.channel.send("Chi ti credi di essere?"+message.author.mention)
 
-    #TODO Start Tournament
+
+
+
+
+   #TODO Start Tournament
     if message.content.startswith(prefix+"tournament") and message.author.id == myid:
         0
     elif message.content.startswith(prefix+"tournament") and message.author.id != myid:
@@ -53,9 +66,4 @@ async def on_message(message):
 
     
 
-
-
-
-
-
-client.run("ODMxNDk0MzE4MzMzNzU1NDQy.YHWDbQ.dao8mfTIDWhIxWJzBfSQiogef-I")
+client.run(os.getenv("TOKEN"))
