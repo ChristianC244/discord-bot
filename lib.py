@@ -23,7 +23,7 @@ async def download(message: message):
     print("Starting meme download")
     i =0
     with open(channel.name+".csv", "w") as file:
-        file.write("message_id"+","+"author_id"+","+"attachment_url"+"\n")
+        #file.write("message_id"+","+"author_id"+","+"attachment_url"+"\n")
         async for msg in channel.history(limit=10000):
             if len(msg.attachments) > 0:
                 file.write(str(i)+","+str(msg.author.id)+","+msg.attachments[0].url+"\n")

@@ -2,7 +2,6 @@ import tournament_class
 from lib import *
 import discord
 from discord import message
-
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,7 +24,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    print(message.id," : ",message.content," : ",message.author)
+    # print(message.id," : ",message.content," : ",message.author)
     if message.author == client.user:
         return
     # Hello command
@@ -59,14 +58,29 @@ async def on_message(message):
 
 
 
-   #TODO Start Tournament
+   # Tournament
     if message.content.startswith(prefix+"tournament") and message.author.id == myid:
         global tour
-        tour = tournament_class.Tournament( "cyber-memes", message.channel)
+        tour = tournament_class.Tournament( "chino01-shitposting", message.channel)
+        await tour.fetch()
     elif message.content.startswith(prefix+"tournament") and message.author.id != myid:
         await message.channel.send("Chi ti credi di essere?"+message.author.mention)
     
+    # TEST
     if message.content.startswith(prefix+"status") and message.author.id == myid:
         tour.status()
+    if message.content.startswith(prefix+"test") and message.author.id == myid:
+        await tour.send_meme()
+
+
+@client.event
+async def on_raw_reaction_add(payload):
+    print("REACTION DETECTED")
+    # print("Message: {0}\nUser: {1}\nEmoji: {2}".format(payload.message_id, payload.user_id, str(payload.emoji)))
+    if tour is not None:
+        await tour.check(payload)
+
+
+
 
 client.run(os.getenv("TOKEN"))

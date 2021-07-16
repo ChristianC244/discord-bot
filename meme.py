@@ -7,5 +7,5 @@ class meme:
         self.link = params[2]
     
     def serialize(self) -> str:
-        return str(self.id) + ',' + str(self.author) +',' + self.link
+        return str(self.id) + ',' + str(self.author) +',' + self.link 
     
