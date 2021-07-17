@@ -1,4 +1,5 @@
 import os.path
+from os import remove
 from meme import meme
 from random import shuffle
 
@@ -28,7 +29,6 @@ class Tournament:
         with open(self.chatmemes, "r") as file:
             # Loads memes
             memedb = file.readlines()
-            #memedb.pop(0)
         self.memedb = [meme(x) for x in memedb] 
 
 
@@ -38,7 +38,6 @@ class Tournament:
                 self.round = int(file.readline().split("=")[1])
                 self.manche_memes = int(file.readline().split("=")[1])
                 self.msg = int(file.readline().split("=")[1][:-1]) # This needs 'fetch()' to be called after initialization to fetch message
-                
 
                 print("Resuming tournament...")
         else:
@@ -96,7 +95,6 @@ class Tournament:
 
     async def check(self, payload) -> None:
         """Check reactions"""
-        # Needs to check if user voted twice !!!
         msg = payload.message_id
         react = str(payload.emoji)
         await self.fetch()
@@ -123,7 +121,6 @@ class Tournament:
         self.memedb.pop(self.round + loser)
         self.round += 1
         if self.manche_memes - self.round == self.round:
-            #TODO
             await self.next_manche()
         else: 
             await self.send_meme(self.memedb[self.round], self.memedb[self.round + 1])
@@ -140,8 +137,11 @@ class Tournament:
         if self.manche_memes == 0:
             """WINNER"""
             await self.msg.channel.send("Congratulation <@{}> your meme was the best".format(str(self.memedb[0].author)))
+            remove(self.STATE)
+            remove(self.chatmemes)
             return None
         shuffle(self.memedb)
+        await self.channel.send("NUOVA MANCHE")
         await self.send_meme(self.memedb[self.round], self.memedb[self.round+1])
 
 
