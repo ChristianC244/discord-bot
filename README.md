@@ -1,3 +1,4 @@
 # discord bot pet project
 
-small bot for discord to reduce stress during Online Lectures wich hosts memes contests!
+A small bot for discord, hoping to reduce boredom during Online Lectures.
+It's main purpose it's to  ~~serve butter~~ host meme tournaments.
