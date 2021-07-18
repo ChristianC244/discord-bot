@@ -12,6 +12,7 @@ prefix = "!"
 myid = int(os.getenv("MY_ID"))
 tour = None
 guild = None
+path = os.getcwd()+"/"
 
 cmds = {
     prefix+"hello":"Respond to the greeting.",
@@ -22,7 +23,7 @@ cmds = {
 # ------------ FUNCTIONS
 
 async def check_tournament_online():
-    if os.path.isfile("data/state.json"):
+    if os.path.isfile(path+"data/state.json"):
         global tour
         tour = tournament_class.Tournament(auto = True)
         await tour.fetch(guild=guild)

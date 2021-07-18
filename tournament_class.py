@@ -15,10 +15,11 @@ class Tournament:
     """Meme tournament: Creates 2v2 rounds until there is only one meme remaining!"""
     REACTIONS = ["⬆️","⬇️"]    
     
-    def __init__(self,auto: bool, chatmemes: str = "", channel = None  ):
+    def __init__(self,auto: bool, chatmemes: str = "", channel = None, path = ""  ):
         """Resume or starts anew the tournament (depends if the file 'state' exists or not)"""
 
-        self.save_file = "data/state.json"
+        self.save_file = path+"data/state.json"
+        self.path = path
         
         if auto:
             # Initialization has been called because state.json file exists
@@ -45,7 +46,7 @@ class Tournament:
                 raise Exception 
 
             # Loads memes
-            with open("data/"+chatmemes+".csv", "r") as file:
+            with open(path+"data/"+chatmemes+".csv", "r") as file:
                 memedb = file.readlines()
             self.memedb = [meme(x) for x in memedb]
 
@@ -53,7 +54,7 @@ class Tournament:
             self.state = dict()
             self.state["channel_id"] = channel.id
             self.channel = channel
-            self.state["chatmemes"] = "data/"+chatmemes+".csv"
+            self.state["chatmemes"] = path+"data/"+chatmemes+".csv"
             self.state["round"] = 0
             self.state["manche_memes"] = manche(len(self.memedb))
             self.state["msg_id"] = 0
@@ -95,7 +96,7 @@ class Tournament:
             self.msg = await self.channel.fetch_message(self.state["msg_id"])        
         
 
-    async def send_meme(self, a: meme = None, b: meme = None) -> None:
+    async def send_meme(self, a: meme = None, b: meme = None, ) -> None:
         """Sends 2 memes with two reactions for the voting systems, it stores the message in self.state["msg"]"""
         
         img_a = requests.get(a.link[:-1]).content
@@ -104,23 +105,23 @@ class Tournament:
         name_a = a.link[:-1].split("/")[-1]
         name_b = b.link[:-1].split("/")[-1]
 
-        with open("data/"+name_a,"wb") as file:
+        with open(self.path+"data/"+name_a,"wb") as file:
             file.write(img_a)
         
-        with open("data/"+name_b,"wb") as file:
+        with open(self.path+"data/"+name_b,"wb") as file:
             file.write(img_b)
 
         
-        img_a = discord.File("data/"+name_a)
-        img_b = discord.File("data/"+name_b)
+        img_a = discord.File(self.path+"data/"+name_a)
+        img_b = discord.File(self.path+"data/"+name_b)
 
         self.msg = await self.channel.send("Round {0}/{1}".format(self.state["round"]+1, self.state["manche_memes"]//2), files = [img_a, img_b])
         self.state["msg_id"] = self.msg.id
         await self.msg.add_reaction(self.REACTIONS[0])
         await self.msg.add_reaction(self.REACTIONS[1])
 
-        os.remove("data/"+name_a)
-        os.remove("data/"+name_b)
+        os.remove(self.path+"data/"+name_a)
+        os.remove(self.path+"data/"+name_b)
         
         self.save_state()
 
@@ -155,7 +156,7 @@ class Tournament:
                     max = r.count
                     winner = i
                   
-        if count > 4:
+        if count > 2: #TODO   --------------------------------------------------------
             await self.next(winner)
         
     

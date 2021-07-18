@@ -1,5 +1,9 @@
+# Ignore this
 .vscode
 .env
 __pycache__
 data/*
 test.py
+
+# Exclude that
+!data/.gitkeep
