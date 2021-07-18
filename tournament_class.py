@@ -1,7 +1,8 @@
 import os.path
 from os import remove
-from meme import meme
+from lib.meme import meme
 from random import shuffle
+import json
 
     
 def manche(tot: int) -> int:
@@ -14,66 +15,90 @@ class Tournament:
     """Meme tournament: Creates 2v2 rounds until there is only one meme remaining!"""
     REACTIONS = ["⬆️","⬇️"]    
     
-    def __init__(self, chatmemes: str, channel ):
+    def __init__(self,auto: bool, chatmemes: str = "", channel = None  ):
         """Resume or starts anew the tournament (depends if the file 'state' exists or not)"""
-        self.STATE = "state"
-        self.channel = channel
-        self.chatmemes = chatmemes+".csv"
+
+        self.save_file = "data/state.json"
         
-        if not os.path.isfile(self.chatmemes):
-            # No database
-            print("Download memes first! <#{0}>".format(chatmemes))
-            raise FileNotFoundError
+        if auto:
+            # Initialization has been called because state.json file exists
+            with open(self.save_file) as file:
+                jstring = file.readline()
+            self.state = json.loads(jstring)
 
-        
-        with open(self.chatmemes, "r") as file:
-            # Loads memes
-            memedb = file.readlines()
-        self.memedb = [meme(x) for x in memedb] 
-
-
-        if os.path.isfile(self.STATE):
-
-            with open(self.STATE, "r") as file:
-                self.round = int(file.readline().split("=")[1])
-                self.manche_memes = int(file.readline().split("=")[1])
-                self.msg = int(file.readline().split("=")[1][:-1]) # This needs 'fetch()' to be called after initialization to fetch message
-
-                print("Resuming tournament...")
-        else:
-            self.round = 0
-            self.manche_memes = manche(len(self.memedb))
+            #TODO fetch channel/ messages
+            self.channel = None
             self.msg = None
-            shuffle(self.memedb)
+            
+            # Loads memes
+            with open(self.state["chatmemes"], "r") as file:
+                memedb = file.readlines()
+            self.memedb = [meme(x) for x in memedb]
 
-            with open(self.chatmemes, "w") as file:
+
+            print("Resuming tournament...")
+
+        else:
+            # It's a brand new tournament
+            if chatmemes == "" or channel is None:
+                '''If new tournament this parameters needs to be passed!'''
+                raise Exception 
+
+            # Loads memes
+            with open("data/"+chatmemes+".csv", "r") as file:
+                memedb = file.readlines()
+            self.memedb = [meme(x) for x in memedb]
+
+            # state variables
+            self.state = dict()
+            self.state["channel_id"] = channel.id
+            self.channel = channel
+            self.state["chatmemes"] = "data/"+chatmemes+".csv"
+            self.state["round"] = 0
+            self.state["manche_memes"] = manche(len(self.memedb))
+            self.state["msg_id"] = 0
+            self.msg = None
+            
+            # Save memes shuffled
+            shuffle(self.memedb)
+            with open(self.state["chatmemes"], "w") as file:
                 for m in self.memedb:
                     file.write(m.serialize())
+            
+            #Save state.json
+            jstring = json.dumps(self.state)
+            with open(self.save_file, "w") as file:
+                file.write(jstring)
 
-            with open(self.STATE, "w") as file:
-                file.write("round="+str(self.round)+"\n")
-                file.write("manche_memes="+str(self.manche_memes)+"\n")
-                file.write("msg=0\n")
 
             print("Tournament started...")
 
-    
-    async def fetch(self):
-        """This needs to be called after initialization to fetch the last message sent"""
-        if isinstance(self.msg, int):
-            self.msg = await self.channel.fetch_message(self.msg)
-        elif self.msg is None: await self.send_meme(self.memedb[0], self.memedb[1])
-        else: self.msg = await self.channel.fetch_message(self.msg.id)
-    
-    def status(self) -> None:
-        """Print the status of the tournament"""
-        print("\nRound: {0}\nMemes in this Manche: {1}\nLast message id: {2}\nTotal memes remaining: {3}\n".format(self.round, self.manche_memes, self.msg, len(self.memedb)))
 
     
     
+    async def fetch(self, guild = None):
+        """This needs to be called after initialization to fetch the last message sent"""
+
+        if guild is not None and self.state["msg_id"] == 0:
+            self.channel = guild.get_channel(self.state["channel_id"])
+            await self.send_meme(self.memedb[0], self.memedb[1])
+            
+        elif guild is not None and self.state["msg_id"] != 0:
+            #fetch channel and message
+            channels = await guild.fetch_channels()
+            for c in channels:
+                if c.id == self.state["channel_id"]:
+                    self.channel = c
+                    break
+            self.msg = await self.channel.fetch_message(self.state["msg_id"])
+        else:
+            self.msg = await self.channel.fetch_message(self.state["msg_id"])        
+        
+
     async def send_meme(self, a: meme = None, b: meme = None) -> None:
-        """Sends 2 memes with two reactions for the voting systems, it stores the message in self.msg"""
+        """Sends 2 memes with two reactions for the voting systems, it stores the message in self.state["msg"]"""
         self.msg = await self.channel.send(a.link + " " + b.link)
+        self.state["msg_id"] = self.msg.id
         await self.msg.add_reaction(self.REACTIONS[0])
         await self.msg.add_reaction(self.REACTIONS[1])
         
@@ -81,14 +106,13 @@ class Tournament:
 
 
     def save_state(self, db=False) -> None:
-        """Call this to save the state of the tournamente into a file"""
-        with open(self.STATE, "w") as file:
-                file.write("round="+str(self.round)+"\n")
-                file.write("manche_memes="+str(self.manche_memes)+"\n")
-                file.write("msg="+str(self.msg.id)+"\n")
+        """Call this to state the state of the tournamente into a file"""
+        jstring = json.dumps(self.state)
+        with open(self.save_file, "w") as file:
+            file.write(jstring)
         
         if db:
-            with open(self.chatmemes, "w") as file:
+            with open(self.state["chatmemes"], "w") as file:
                 for x in self.memedb:
                     file.write(x.serialize())
 
@@ -96,7 +120,6 @@ class Tournament:
     async def check(self, payload) -> None:
         """Check reactions"""
         msg = payload.message_id
-        react = str(payload.emoji)
         await self.fetch()
 
         if msg != self.msg.id:
@@ -112,37 +135,40 @@ class Tournament:
                     max = r.count
                     winner = i
                   
-        if count > 4: 
+        if count > 2: #TODO         <--------------------------- CHANGE HERE > 4
             await self.next(winner)
         
     
     async def next(self, winner: int) -> None:
+        end = False
         loser = (winner + 1)%2
-        self.memedb.pop(self.round + loser)
-        self.round += 1
-        if self.manche_memes - self.round == self.round:
-            await self.next_manche()
+        self.memedb.pop(self.state["round"] + loser)
+        self.state["round"] += 1
+        if self.state["manche_memes"] - self.state["round"] == self.state["round"]:
+            end = await self.next_manche()
         else: 
-            await self.send_meme(self.memedb[self.round], self.memedb[self.round + 1])
-        self.save_state(True)
+            await self.send_meme(self.memedb[self.state["round"]], self.memedb[self.state["round"] + 1])
+        
+        if not end:self.save_state(True)
         
 
         
-    async def next_manche(self) -> None:
+    async def next_manche(self):
         """Resets round and creates new manche"""
-        self.round = 0
+        self.state["round"] = 0
         l = len(self.memedb)
-        self.manche_memes = manche(l)
+        self.state["manche_memes"] = manche(l)
 
-        if self.manche_memes == 0:
+        if self.state["manche_memes"] == 0:
             """WINNER"""
             await self.msg.channel.send("Congratulation <@{}> your meme was the best".format(str(self.memedb[0].author)))
-            remove(self.STATE)
-            remove(self.chatmemes)
-            return None
+            remove(self.save_file)
+            remove(self.state["chatmemes"])
+            return True
         shuffle(self.memedb)
         await self.channel.send("NUOVA MANCHE")
-        await self.send_meme(self.memedb[self.round], self.memedb[self.round+1])
+        await self.send_meme(self.memedb[self.state["round"]], self.memedb[self.state["round"]+1])
+        return False
 
 
 
