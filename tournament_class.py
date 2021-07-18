@@ -156,7 +156,7 @@ class Tournament:
                     max = r.count
                     winner = i
                   
-        if count > 2: #TODO   --------------------------------------------------------
+        if count > 4:
             await self.next(winner)
         
     
