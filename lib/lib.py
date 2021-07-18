@@ -4,7 +4,7 @@ import os
 
 from discord.errors import InvalidArgument
 
-async def download(message: message, path:str =""):
+async def download(message: message, path =""):
     """"Download entire text-channel memes, passed through message, and stores in ./<channel-name>.csv"""
     
     content = message.content
@@ -24,7 +24,6 @@ async def download(message: message, path:str =""):
     i =0
 
     with open(path+'data/'+channel.name+'.csv', "w") as file:
-        
         async for msg in channel.history(limit=10000):
             if len(msg.attachments) > 0:
                 file.write(str(i)+","+str(msg.author.id)+","+msg.attachments[0].url+"\n")

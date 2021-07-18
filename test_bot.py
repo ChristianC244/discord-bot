@@ -12,7 +12,7 @@ prefix = "!"
 myid = int(os.getenv("MY_ID"))
 tour = None
 guild = None
-path = os.getcwd()+"/"
+path = os.path.dirname(__file__)+"/"
 
 cmds = {
     prefix+"hello":"Respond to the greeting.",
@@ -25,7 +25,7 @@ cmds = {
 async def check_tournament_online():
     if os.path.isfile(path+"data/state.json"):
         global tour
-        tour = tournament_class.Tournament(auto = True)
+        tour = tournament_class.Tournament(auto = True, path=path)
         await tour.fetch(guild=guild)
 
 async def my_guild():
@@ -63,7 +63,7 @@ async def on_message(message):
     # Download meme database
     if message.content.startswith(prefix+"download") and message.author.id == myid:
         try:
-            await lib.download(message)
+            await lib.download(message,path=path)
         except lib.InvalidArgument:
             await message.channel.send("Il messaggio deve contenere il canale da cui scaricare i meme: '!download #memes-chat'")
         except:
@@ -78,12 +78,12 @@ async def on_message(message):
         global tour
         chat = ""
         try:
-            chat = await lib.download(message)
+            chat = await lib.download(message, path=path)
         except lib.InvalidArgument:
             await message.channel.send("Il messaggio deve contenere il canale da cui scaricare i meme: '!tournament #memes-chat'")
         except:
             await message.channel.send("Qualcosa è andato storto")
-        tour = tournament_class.Tournament( False, chat, message.channel)
+        tour = tournament_class.Tournament( False, chat, message.channel, path=path)
         await tour.fetch(guild = message.guild)
         
     elif message.content.startswith(prefix+"tournament") and message.author.id != myid:
