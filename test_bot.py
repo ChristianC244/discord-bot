@@ -84,11 +84,10 @@ async def on_message(message):
             await message.channel.send("Qualcosa è andato storto")
         tour = tournament_class.Tournament( False, chat, message.channel)
         await tour.fetch(guild = message.guild)
+        
     elif message.content.startswith(prefix+"tournament") and message.author.id != myid:
         await message.channel.send("Chi ti credi di essere?"+message.author.mention)
-    # Check Tournament Status
-    if message.content.startswith(prefix+"status") and message.author.id == myid:
-        tour.status()
+
 
 
 @client.event

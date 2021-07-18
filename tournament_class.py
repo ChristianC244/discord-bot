@@ -1,9 +1,9 @@
-import os.path
-from os import remove
+import os
 from lib.meme import meme
 from random import shuffle
 import json
-
+import requests
+import discord
     
 def manche(tot: int) -> int:
         x = 2
@@ -97,10 +97,30 @@ class Tournament:
 
     async def send_meme(self, a: meme = None, b: meme = None) -> None:
         """Sends 2 memes with two reactions for the voting systems, it stores the message in self.state["msg"]"""
-        self.msg = await self.channel.send(a.link + " " + b.link)
+        
+        img_a = requests.get(a.link[:-1]).content
+        img_b = requests.get(b.link[:-1]).content
+        
+        name_a = a.link[:-1].split("/")[-1]
+        name_b = b.link[:-1].split("/")[-1]
+
+        with open("data/"+name_a,"wb") as file:
+            file.write(img_a)
+        
+        with open("data/"+name_b,"wb") as file:
+            file.write(img_b)
+
+        
+        img_a = discord.File("data/"+name_a)
+        img_b = discord.File("data/"+name_b)
+
+        self.msg = await self.channel.send("Round {0}/{1}".format(self.state["round"]+1, self.state["manche_memes"]//2), files = [img_a, img_b])
         self.state["msg_id"] = self.msg.id
         await self.msg.add_reaction(self.REACTIONS[0])
         await self.msg.add_reaction(self.REACTIONS[1])
+
+        os.remove("data/"+name_a)
+        os.remove("data/"+name_b)
         
         self.save_state()
 
@@ -152,9 +172,14 @@ class Tournament:
         if not end:self.save_state(True)
         
 
-        
+
     async def next_manche(self):
+        
         """Resets round and creates new manche"""
+
+
+        manche_str = '''▀▄▀▄▀▄     𝒩𝑒𝓍𝓉 𝑀𝒶𝓃𝒸𝒽𝑒     ▄▀▄▀▄▀'''
+
         self.state["round"] = 0
         l = len(self.memedb)
         self.state["manche_memes"] = manche(l)
@@ -162,11 +187,11 @@ class Tournament:
         if self.state["manche_memes"] == 0:
             """WINNER"""
             await self.msg.channel.send("Congratulation <@{}> your meme was the best".format(str(self.memedb[0].author)))
-            remove(self.save_file)
-            remove(self.state["chatmemes"])
+            os.remove(self.save_file)
+            os.remove(self.state["chatmemes"])
             return True
         shuffle(self.memedb)
-        await self.channel.send("NUOVA MANCHE")
+        await self.channel.send(manche_str)
         await self.send_meme(self.memedb[self.state["round"]], self.memedb[self.state["round"]+1])
         return False
 
