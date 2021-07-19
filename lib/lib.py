@@ -31,3 +31,11 @@ async def download(message: message, path =""):
     print(i," memes downloaded")
     return channel.name
     
+
+def lacomizer(message: str) -> bool:
+    target = os.getenv("TARGET").split("/")
+    for t in target:
+        if t in message.lower():
+            return True
+    
+    return False

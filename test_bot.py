@@ -12,13 +12,15 @@ myid = int(os.getenv("MY_ID"))
 tour = None
 guild = None
 path = os.path.dirname(__file__)+"/"
+lacom = True
 
 cmds = {
     prefix+"hello":"Respond to the greeting.",
     prefix+"download":"Requires a chat tagged as a parameter, and downloads every image from that chat (ownler only)",
     prefix+"help":"I guess you somehow figured out.",
     prefix+"wumpus":"Chi è il wumpus?",
-    prefix+"tournament":"Requires a chat tagged as a parameter, and starts the tournament with memes from that chat (owner only)"
+    prefix+"tournament":"Requires a chat tagged as a parameter, and starts the tournament with memes from that chat (owner only)",
+    prefix+"lacomizer":"enable/disable lacomizer"
 }
 # ------------ FUNCTIONS
 
@@ -50,18 +52,18 @@ async def on_message(message):
         await message.channel.send("Hey!")
     
     # Wumpus command
-    if message.content.startswith(prefix+"wumpus"):
+    elif message.content.startswith(prefix+"wumpus"):
         await message.channel.send("Nel gioco del wumpus, il wumpus è una bestia che emana un odore acre :nauseated_face:")
 
     # Help command
-    if message.content.startswith(prefix+"help"):
+    elif message.content.startswith(prefix+"help"):
         msg = "Here's the list of commands available to the bot\n"
         for c in cmds:
             msg+="> **"+c+"** --> "+cmds[c]+"\n"
         await message.channel.send(msg)
     
     # Download meme database
-    if message.content.startswith(prefix+"download") and message.author.id == myid:
+    elif message.content.startswith(prefix+"download") and message.author.id == myid:
         try:
             await lib.download(message,path=path)
         except lib.InvalidArgument:
@@ -74,7 +76,7 @@ async def on_message(message):
 
 
    # Tournament
-    if message.content.startswith(prefix+"tournament") and message.author.id == myid:
+    elif message.content.startswith(prefix+"tournament") and message.author.id == myid:
         global tour
         chat = ""
         try:
@@ -88,6 +90,13 @@ async def on_message(message):
         
     elif message.content.startswith(prefix+"tournament") and message.author.id != myid:
         await message.channel.send("Chi ti credi di essere?"+message.author.mention)
+
+    # Lacomizer
+    elif message.content.startswith(prefix+"lacomizer"):
+        global lacom
+        lacom = not lacom
+        await message.channel.send("Lacomizer: {}".format("enabled" if lacom else "disabled"))
+    elif lib.lacomizer(message.content) and lacom: await message.add_reaction("🤡")
 
 
 
