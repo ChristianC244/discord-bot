@@ -169,7 +169,7 @@ class Tournament:
                             return
 
                   
-        if count > 2:  #TODO -----------------------------CHANGE TO 4
+        if count > 4:  #TODO -----------------------------CHANGE TO 4
             await self.next(winner)
         
     
