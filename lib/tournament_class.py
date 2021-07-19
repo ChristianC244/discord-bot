@@ -1,15 +1,17 @@
 import os
-from lib.meme import meme
+from lib.meme_class import meme
 from random import shuffle
 import json
 import requests
 import discord
     
 def manche(tot: int) -> int:
-        x = 2
-        while (x<tot):
-            x  *= 2
-        return tot - (x-tot)
+    """Counts how many memes will be in a manche, given 'tot' meme remaining"""
+
+    x = 2
+    while (x<tot):
+        x  *= 2
+    return tot - (x-tot)
 
 class Tournament:
     """Meme tournament: Creates 2v2 rounds until there is only one meme remaining!"""
@@ -73,9 +75,7 @@ class Tournament:
 
 
             print("Tournament started...")
-
-
-    
+  
     
     async def fetch(self, guild = None):
         """This needs to be called after initialization to fetch the last message sent"""
@@ -127,7 +127,7 @@ class Tournament:
 
 
     def save_state(self, db=False) -> None:
-        """Call this to state the state of the tournamente into a file"""
+        """Call this to save the state of the tournamente into a file"""
         jstring = json.dumps(self.state)
         with open(self.save_file, "w") as file:
             file.write(jstring)
@@ -140,6 +140,9 @@ class Tournament:
 
     async def check(self, payload) -> None:
         """Check reactions"""
+        bot_id =831494318333755442
+        voters = dict()
+
         msg = payload.message_id
         await self.fetch()
 
@@ -155,12 +158,23 @@ class Tournament:
                 if r.count > max:
                     max = r.count
                     winner = i
+                if i==0:
+                    async for u in r.users():
+                        voters[u.id] = 1
+                elif i==1:
+                    async for u in r.users():
+                        if u.id in voters and u.id != bot_id: 
+                            print("Double Vote Detected")
+                            await self.channel.send("<@{0}>Se non rimuovi il doppio voto non si continua".format(u.id))
+                            return
+
                   
-        if count > 4:
+        if count > 2:  #TODO -----------------------------CHANGE TO 4
             await self.next(winner)
         
     
     async def next(self, winner: int) -> None:
+        """Called for next round, if manche is concluded calls 'next_manche()'"""
         end = False
         loser = (winner + 1)%2
         self.memedb.pop(self.state["round"] + loser)
@@ -171,15 +185,12 @@ class Tournament:
             await self.send_meme(self.memedb[self.state["round"]], self.memedb[self.state["round"] + 1])
         
         if not end:self.save_state(True)
-        
 
 
-    async def next_manche(self):
-        
+    async def next_manche(self):       
         """Resets round and creates new manche"""
 
-
-        manche_str = '''▀▄▀▄▀▄     𝒩𝑒𝓍𝓉 𝑀𝒶𝓃𝒸𝒽𝑒     ▄▀▄▀▄▀'''
+        manche_str = '▀▄▀▄▀▄     𝒩𝑒𝓍𝓉 𝑀𝒶𝓃𝒸𝒽𝑒     ▄▀▄▀▄▀'
 
         self.state["round"] = 0
         l = len(self.memedb)

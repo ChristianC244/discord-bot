@@ -1,5 +1,4 @@
-import tournament_class
-from lib import lib
+from lib import lib, tournament_class
 
 import discord
 import os
@@ -16,9 +15,10 @@ path = os.path.dirname(__file__)+"/"
 
 cmds = {
     prefix+"hello":"Respond to the greeting.",
-    prefix+"download":"That's a secret!",
+    prefix+"download":"Requires a chat tagged as a parameter, and downloads every image from that chat (ownler only)",
     prefix+"help":"I guess you somehow figured out.",
-    prefix+"wumpus":"chi è il wumpus?"
+    prefix+"wumpus":"Chi è il wumpus?",
+    prefix+"tournament":"Requires a chat tagged as a parameter, and starts the tournament with memes from that chat (owner only)"
 }
 # ------------ FUNCTIONS
 
