@@ -2,7 +2,7 @@ from lib import lib, tournament_class
 
 import discord
 import os
-import os.path
+import json
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -12,7 +12,9 @@ myid = int(os.getenv("MY_ID"))
 tour = None
 guild = None
 path = os.path.dirname(__file__)+"/"
-lacom = True
+
+state = dict()
+state["lacom"]= True
 
 cmds = {
     prefix+"hello":"Respond to the greeting.",
@@ -25,7 +27,7 @@ cmds = {
 # ------------ FUNCTIONS
 
 async def check_tournament_online():
-    if os.path.isfile(path+"data/state.json"):
+    if os.path.isfile(path+"data/tournament.json"):
         global tour
         tour = tournament_class.Tournament(auto = True, path=path)
         await tour.fetch(guild=guild)
@@ -34,14 +36,29 @@ async def my_guild():
     async for guild in client.fetch_guilds(limit=150):
         return guild
 
+def resume():
+    global state
+    if not os.path.isfile(path+"data/state.json"):
+        print("Missing state.json file")
+        return
+    with open(path+"data/state.json", "r") as file:
+        jstring = file.readline()
+    state = json.loads(jstring)
+
+def save_state():
+    jstring = json.dumps(state)
+    with open(path+"data/state.json", "w") as file:
+        file.write(jstring)
+
 
 # ------------ CLIENT
 @client.event
 async def on_ready():
     global guild
     guild = await my_guild()
-    print("Bot is now online")
+    resume()
     await check_tournament_online()
+    print("Bot is now ready")
 
 @client.event
 async def on_message(message):
@@ -93,10 +110,10 @@ async def on_message(message):
 
     # Lacomizer
     elif message.content.startswith(prefix+"lacomizer"):
-        global lacom
-        lacom = not lacom
-        await message.channel.send("Lacomizer: {}".format("enabled" if lacom else "disabled"))
-    elif lib.lacomizer(message.content) and lacom: await message.add_reaction("🤡")
+        state["lacom"] = not state["lacom"]
+        await message.channel.send("Lacomizer: {}".format("enabled" if state["lacom"] else "disabled"))
+        save_state()
+    elif lib.lacomizer(message.content) and state["lacom"]: await message.add_reaction("🤡")
 
 
 

@@ -20,11 +20,11 @@ class Tournament:
     def __init__(self,auto: bool, chatmemes: str = "", channel = None, path = ""  ):
         """Resume or starts anew the tournament (depends if the file 'state' exists or not)"""
 
-        self.save_file = path+"data/state.json"
+        self.save_file = path+"data/tournament.json"
         self.path = path
         
         if auto:
-            # Initialization has been called because state.json file exists
+            # Initialization has been called because tournament.json file exists
             with open(self.save_file) as file:
                 jstring = file.readline()
             self.state = json.loads(jstring)
@@ -68,7 +68,7 @@ class Tournament:
                 for m in self.memedb:
                     file.write(m.serialize())
             
-            #Save state.json
+            #Save tournament.json
             jstring = json.dumps(self.state)
             with open(self.save_file, "w") as file:
                 file.write(jstring)
