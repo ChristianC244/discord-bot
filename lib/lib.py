@@ -33,9 +33,11 @@ async def download(message: message, path =""):
     
 
 def lacomizer(message: str) -> bool:
+    msg = message.lower()
     target = os.getenv("TARGET").split("/")
+
     for t in target:
-        if t in message.lower():
+        if re.search(r'\b'+t+r'\b', msg):
             return True
     
     return False

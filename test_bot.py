@@ -14,7 +14,7 @@ guild = None
 path = os.path.dirname(__file__)+"/"
 
 state = dict()
-state["lacom"]= True
+
 
 cmds = {
     prefix+"hello":"Respond to the greeting.",
@@ -40,6 +40,7 @@ def resume():
     global state
     if not os.path.isfile(path+"data/state.json"):
         print("Missing state.json file")
+        state["lacom"]= True
         return
     with open(path+"data/state.json", "r") as file:
         jstring = file.readline()
@@ -50,8 +51,8 @@ def save_state():
     with open(path+"data/state.json", "w") as file:
         file.write(jstring)
 
-
 # ------------ CLIENT
+
 @client.event
 async def on_ready():
     global guild
