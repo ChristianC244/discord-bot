@@ -4,6 +4,7 @@ from random import shuffle
 import json
 import requests
 import discord
+import numpy as np
     
 def manche(tot: int) -> int:
     """Counts how many memes will be in a manche, given 'tot' meme remaining"""
@@ -148,28 +149,38 @@ class Tournament:
 
         if msg != self.msg.id:
             return None
-        
-        count = 0
-        max = 0
-        winner = -1
-        for r,i in zip(self.msg.reactions, range(2)):
-            if str(r.emoji) in self.REACTIONS:
-                count += r.count
-                if r.count > max:
-                    max = r.count
-                    winner = i
-                if i==0:
+
+        count = [0,0] # vote for each reaction
+        votes = 0 # Counts total votes
+        voters = dict() # Used to check double votes
+        i = -1
+        for r in self.msg.reactions:
+            if str(r.emoji) not in self.REACTIONS:
+                return
+            i+=1
+            count[i] = r.count
+            votes += count[i]
+            
+            # ---- double votes check
+            if i==0:
                     async for u in r.users():
                         voters[u.id] = 1
-                elif i==1:
+            elif i==1:
                     async for u in r.users():
                         if u.id in voters and u.id != bot_id: 
                             print("Double Vote Detected")
                             await self.channel.send("<@{0}>Se non rimuovi il doppio voto non si continua".format(u.id))
                             return
-
+            
                   
-        if count > 4:  #TODO -----------------------------CHANGE TO 4
+        if votes > 5:
+            
+            if count[0] == count[1]:
+                winner = np.random.binomial(size=1,n=1,p=0.5)[0]
+                await self.msg.channel.send("Facciamo che scelgo io...")
+            else:
+                winner = 0 if count[0]>count[1] else 1
+
             await self.next(winner)
         
     
@@ -199,6 +210,7 @@ class Tournament:
         if self.state["manche_memes"] == 0:
             """WINNER"""
             await self.msg.channel.send("Congratulation <@{}> your meme was the best".format(str(self.memedb[0].author)))
+            await self.msg.channel.send(self.memedb[0].link)
             os.remove(self.save_file)
             os.remove(self.state["chatmemes"])
             return True

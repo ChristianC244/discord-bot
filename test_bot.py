@@ -1,4 +1,5 @@
 from lib import lib, tournament_class
+from lib.lib import *
 
 import discord
 import os
