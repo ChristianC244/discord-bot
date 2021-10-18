@@ -1,7 +1,8 @@
-from lib import lib, tournament_class
+from lib import lib, tournament_class, commit_checker
 from lib.lib import *
 
 import discord
+import threading
 import os
 import json
 from dotenv import load_dotenv
@@ -60,6 +61,11 @@ async def on_ready():
     guild = await my_guild()
     resume()
     await check_tournament_online()
+    x = threading.Thread(target=await commit_checker.git_stuff(guild,wd=os.getenv("WD")), args=(1,))
+    x.start()
+
+
+
     print("Bot is now ready")
 
 @client.event

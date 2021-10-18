@@ -217,8 +217,5 @@ class Tournament:
         shuffle(self.memedb)
         await self.channel.send(manche_str)
         await self.send_meme(self.memedb[self.state["round"]], self.memedb[self.state["round"]+1])
+        
         return False
-
-
-
-
