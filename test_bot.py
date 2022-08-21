@@ -61,8 +61,8 @@ async def on_ready():
     guild = await my_guild()
     resume()
     await check_tournament_online()
-    x = threading.Thread(target=await commit_checker.git_stuff(guild,wd=os.getenv("WD")), args=(1,))
-    x.start()
+    #x = threading.Thread(target=await commit_checker.git_stuff(guild,wd=os.getenv("WD")), args=(1,))
+    #x.start()
 
 
 
